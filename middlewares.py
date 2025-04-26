@@ -18,7 +18,7 @@ class EnvMiddleware(BaseMiddleware):
 
 
 class I18nMiddleware(BaseMiddleware):
-    ctx_locale = ContextVar('ctx_user_locale', default='en')
+    ctx_locale = ContextVar('ctx_user_locale', default='ru')
 
     def __init__(self, env: Env, default_locale='ru'):
         self._env = env

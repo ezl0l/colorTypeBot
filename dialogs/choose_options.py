@@ -3,30 +3,25 @@ from aiogram_dialog.widgets.kbd import Button, Group
 from aiogram_dialog.widgets.text import Const
 from aiogram_dialog import DialogManager
 from aiogram.types import CallbackQuery
+import i18n
+
+from i18n_dialog import I18nText
 from states import States
 
 
 async def on_choose(callback: CallbackQuery, button: Button, manager: DialogManager):
-    texts = {
-        "only_color": "Ваш цветотип: Тёплая весна 🌸",
-        "makeup": "Рекомендуемый макияж: нюдовый с золотистыми тенями 💄",
-        "hair_color": "Рекомендуемые цвета волос: золотистый блонд, карамельный ☀️",
-        "clothes": "Одежда: пастельные оттенки, нежные ткани 👗",
-        "all": "Всё вместе: Цветотип - Весна, макияж - нюд, волосы - карамель, одежда - пастель 🌼",
-    }
-    manager.dialog_data["result_text"] = texts.get(button.widget_id, "Выберите опцию заново!")
+    result_text = i18n.t(f"result_texts.{button.widget_id}", default=i18n.t("result_texts.unknown"))
+    manager.dialog_data["result_text"] = result_text
     await manager.next()
 
-
 choose_options_window = Window(
-    Const("Вы добавили фото.\n"
-          "Выберите, что Вы хотите узнать дополнительно:"),
+    I18nText("option_choosing_message"),
     Group(
-        Button(Const("Только цветотип"), id="only_color", on_click=on_choose),
-        Button(Const("Макияж"), id="makeup", on_click=on_choose),
-        Button(Const("Цвет волос"), id="hair_color", on_click=on_choose),
-        Button(Const("Одежда"), id="clothes", on_click=on_choose),
-        Button(Const("Все выше перечисленное"), id="all", on_click=on_choose),
+        Button(I18nText("btn.only_color"), id="only_color", on_click=on_choose),
+        Button(I18nText("btn.makeup"), id="makeup", on_click=on_choose),
+        Button(I18nText("btn.hair_color"), id="hair_color", on_click=on_choose),
+        Button(I18nText("btn.clothes"), id="clothes", on_click=on_choose),
+        Button(I18nText("btn.all"), id="all", on_click=on_choose),
     ),
     state=States.choose_option,
 )

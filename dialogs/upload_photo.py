@@ -1,38 +1,34 @@
-from aiogram import types
+from aiogram_dialog import Window
+from aiogram_dialog.widgets.kbd import Button, Row
+from aiogram_dialog.widgets.input import MessageInput
+from aiogram_dialog import DialogManager
+from aiogram.types import Message, CallbackQuery
 from aiogram.enums import ContentType
 
-from aiogram_dialog import DialogManager, Window
-from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Button, Row
-from aiogram_dialog.widgets.text import Const
-
+from i18n_dialog import I18nText
 from states import States
 
+import i18n
 
-async def on_upload_photo(message: types.Message, _, dialog_manager: DialogManager):
+
+async def on_upload_photo(message: Message, widget, manager: DialogManager):
     if message.photo:
-        photo = message.photo[-1]
-        file_id = photo.file_id
-        dialog_manager.dialog_data["photo_file_id"] = file_id
-        await dialog_manager.next()
+        file_id = message.photo[-1].file_id
+        manager.dialog_data["photo_file_id"] = file_id
+        await manager.next()
     else:
-        await message.answer("Пожалуйста, отправьте именно фотографию.")
+        await message.answer(i18n.t("no_photo_error"))
 
 
-async def on_back(callback, button, dialog_manager):
-    await dialog_manager.back()
+async def on_back(callback: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.back()
 
 
 upload_photo_window = Window(
-    Const("Для определения цветотипа загрузите Ваше фото.\n"
-          "Для более точного результата используйте естественное освещение "
-          "и откажитесь от макияжа. Смотрите прямо в камеру."),
-    MessageInput(
-        on_upload_photo,
-        content_types=[ContentType.PHOTO]
-    ),
+    I18nText("upload_photo_message"),
+    MessageInput(on_upload_photo, content_types=[ContentType.PHOTO]),
     Row(
-        Button(Const("Вернуться"), id="go_back", on_click=on_back),
+        Button(I18nText("btn.back"), id="go_back", on_click=on_back),
     ),
     state=States.upload_photo,
 )

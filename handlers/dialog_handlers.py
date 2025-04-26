@@ -5,7 +5,6 @@ from dialogs.choose_options import choose_options_window
 from dialogs.show_result import show_result_window
 from dialogs.start import start_window
 from dialogs.upload_photo import upload_photo_window
-from env import Env
 
 router = Router()
 
