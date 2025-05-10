@@ -3,6 +3,8 @@ import enum
 from dataclasses import dataclass
 from aiogram.types import User
 
+from dialog_media_manager import DynamicMediaManager
+from face_detector import FaceDetector
 from resources_manager import ResourcesManager
 
 
@@ -15,3 +17,5 @@ class Env:
     env_type: Type
     bot_info: User
     resources_manager: ResourcesManager
+    face_detector: FaceDetector
+    media_manager: DynamicMediaManager

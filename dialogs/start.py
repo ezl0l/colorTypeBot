@@ -6,8 +6,8 @@ from i18n_dialog import I18nText
 from states import States
 
 
-async def on_start(callback, button, dialog_manager):
-    await dialog_manager.next()
+async def on_start(callback, button, manager):
+    await manager.next()
 
 
 start_window = Window(

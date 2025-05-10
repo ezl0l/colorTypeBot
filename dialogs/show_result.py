@@ -17,7 +17,7 @@ async def on_upload_more(callback: CallbackQuery, button: Button, manager: Dialo
 
 
 show_result_window = Window(
-    Format("{dialog_data[result_text]}"),
+    Format("{dialog_data[detection_result][color_type]}"),
     Row(
         Button(I18nText("btn.back"), id="back", on_click=on_back),
         Button(I18nText("btn.upload_more"), id="upload_more", on_click=on_upload_more),

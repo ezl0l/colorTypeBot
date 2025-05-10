@@ -4,16 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6b3b1136-dcb4-4257-8554-7e7d43c7550d" name="Changes" comment="initial">
-      <change afterPath="$PROJECT_DIR$/i18n_dialog.py" afterDir="false" />
+    <list default="true" id="6b3b1136-dcb4-4257-8554-7e7d43c7550d" name="Changes" comment="i18n in dialogs">
+      <change afterPath="$PROJECT_DIR$/dialog_media_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/face_detector.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dialogs/choose_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/choose_options.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dialogs/show_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/show_result.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dialogs/start.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/start.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dialogs/upload_photo.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/upload_photo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/dialog_handlers.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/dialog_handlers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares.py" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/env.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/strings/ru.yml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/strings/ru.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -43,6 +44,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.app.executor": "Run",
+    "Python.test_mediapipe.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
@@ -54,7 +56,7 @@
       <recent name="C:\Users\Admin\PycharmProjects\colorTypeBot" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.app">
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="colorTypeBot" />
       <option name="ENV_FILES" value="" />
@@ -77,15 +79,39 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test_mediapipe" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="colorTypeBot" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_mediapipe.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.app" />
+        <item itemvalue="Python.test_mediapipe" />
       </list>
     </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial" />
-    <option name="LAST_COMMIT_MESSAGE" value="initial" />
+    <MESSAGE value="i18n in dialogs" />
+    <option name="LAST_COMMIT_MESSAGE" value="i18n in dialogs" />
   </component>
 </project>
