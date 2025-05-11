@@ -8,6 +8,9 @@ import numpy as np
 
 from enum import Enum
 
+PUPIL_RADIUS = 5  # радиус вокруг зрачка
+COLOR_THRESHOLD = 30  # порог похожести цвета (евклидово расстояние)
+
 FACE_OUTLINE_IDX = [
     10, 338, 297, 332, 284, 251, 389, 356, 454, 323,
     361, 288, 397, 365, 379, 378, 400, 377, 152, 148,
@@ -41,24 +44,121 @@ class ColorType(Enum):
 
 
 def get_intensity(rgb):
-    # Определяем интенсивность цвета (оттенки яркие или тусклые)
-    r, g, b = rgb
-    return max(r, g, b) - min(r, g, b)  # Разница между максимальным и минимальным значением
+    r, g, b = [x / 255.0 for x in rgb]
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    return s * 100  # Возвращаем насыщенность в процентах
 
 
 def get_temperature_v2(rgb):
-    r, g, b = rgb
-    if r > max(g, b):  # Теплый оттенок
+    r, g, b = [x / 255.0 for x in rgb]  # Нормализация
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+
+    hue_deg = h * 360
+
+    # Примерное разделение:
+    # Тёплые: 0–60 и 300–360 (красные, оранжевые, тёпло-розовые)
+    # Холодные: 60–180 (зеленые, голубые, синие)
+    # Остальные — нейтральные/спорные
+
+    if (hue_deg < 60) or (hue_deg >= 300):
         return 'warm'
-    elif b > max(r, g):  # Холодный оттенок
+    elif 60 <= hue_deg <= 180:
         return 'cool'
-    else:  # Нейтральный
+    else:
         return 'neutral'
 
 
 def get_brightness(rgb):
     r, g, b = rgb
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b  # Формула яркости
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def get_dominant_color(image, tolerance=10):
+    pixels = image.reshape(-1, 3)
+    groups = []
+
+    for pixel in pixels:
+        found = False
+        for group in groups:
+            if np.linalg.norm(pixel - group['color']) < tolerance:
+                group['pixels'].append(pixel)
+                group['color'] = np.mean(group['pixels'], axis=0)  # обновить усреднённо
+                found = True
+                break
+        if not found:
+            groups.append({'pixels': [pixel], 'color': pixel.astype(float)})
+
+    largest_group = max(groups, key=lambda g: len(g['pixels']))
+    return np.array(largest_group['color'], dtype=np.uint8)
+
+
+def extract_region_color(image, center, radius=5):
+    h, w = image.shape[:2]
+    mask = np.zeros((h, w), dtype=np.uint8)
+    cv2.circle(mask, center, radius, 255, -1)
+    region = image[mask == 255]
+    return region
+
+
+def filter_region_by_color(region_coords, image, target_color, threshold):
+    matched_pixels = []
+    for (x, y) in region_coords:
+        color = image[y, x]
+        if np.linalg.norm(color - target_color) < threshold:
+            matched_pixels.append((x, y))
+    return matched_pixels
+
+
+def landmark_to_pixel(landmark, img_width, img_height):
+    return int(landmark.x * img_width), int(landmark.y * img_height)
+
+
+def get_polygon_points(landmarks, indices, img_width, img_height):
+    return [landmark_to_pixel(landmarks[i], img_width, img_height) for i in indices]
+
+
+def create_polygon_mask(image_shape, points):
+    mask = np.zeros(image_shape[:2], dtype=np.uint8)
+    cv2.fillPoly(mask, [np.array(points, dtype=np.int32)], 255)
+    return mask
+
+
+def restrict_area_by_radius(center, max_radius, coords):
+    restricted = []
+    for x, y in coords:
+        if np.linalg.norm(np.array([x, y]) - np.array(center)) <= max_radius:
+            restricted.append((x, y))
+    return restricted
+
+
+def get_circular_pupil_from_filtered_pixels(image, iris_points, pupil_point, iris_coords, pupil_color, color_threshold=30, max_ratio=0.5):
+    # 1. Фильтрация по цвету
+    similar_pixels = filter_region_by_color(iris_coords, image, pupil_color, color_threshold)
+
+    if not similar_pixels:
+        return [], iris_coords
+
+    # 2. Вычисляем расстояния от zрачка до всех цветово-похожих точек
+    distances = [np.linalg.norm(np.array(pupil_point) - np.array(p)) for p in similar_pixels]
+    max_found_radius = max(distances)
+
+    # 3. Среднее расстояние от зрачка до границ радужки (по 4 точкам)
+    iris_distances = [np.linalg.norm(np.array(pupil_point) - np.array(p)) for p in iris_points]
+    max_allowed_radius = np.mean(iris_distances) * max_ratio
+
+    # 4. Ограниченный радиус
+    radius = min(max_found_radius, max_allowed_radius)
+
+    # 5. Строим маску круга с центром в зрачке
+    h, w = image.shape[:2]
+    pupil_mask = np.zeros((h, w), dtype=np.uint8)
+    cv2.circle(pupil_mask, pupil_point, int(radius), 255, -1)
+
+    # 6. Определяем пиксели зрачка и радужки без зрачка
+    pupil_area = [(x, y) for (x, y) in iris_coords if pupil_mask[y, x] == 255]
+    iris_without_pupil = list(set(iris_coords) - set(pupil_area))
+
+    return pupil_area, iris_without_pupil
 
 
 def determine_color_type(hair_rgb, face_rgb, eyes_rgb):
@@ -78,6 +178,21 @@ def determine_color_type(hair_rgb, face_rgb, eyes_rgb):
     hair_brightness = get_brightness(hair_rgb)
     face_brightness = get_brightness(face_rgb)
     eyes_brightness = get_brightness(eyes_rgb)
+
+    print("=== Температура цвета (color temperature) ===")
+    print(f"Hair: {hair_temp}")
+    print(f"Face: {face_temp}")
+    print(f"Eyes: {eyes_temp}")
+
+    print("\n=== Интенсивность цвета (color intensity) ===")
+    print(f"Hair: {hair_intensity:.2f}")
+    print(f"Face: {face_intensity:.2f}")
+    print(f"Eyes: {eyes_intensity:.2f}")
+
+    print("\n=== Яркость (brightness) ===")
+    print(f"Hair: {hair_brightness:.2f}")
+    print(f"Face: {face_brightness:.2f}")
+    print(f"Eyes: {eyes_brightness:.2f}")
 
     # Общее распределение температуры
     is_warm = (hair_temp == 'warm' or face_temp == 'warm' or eyes_temp == 'warm')
@@ -127,29 +242,6 @@ class FaceDetector:
 
         landmarks = face_landmarks.landmark
 
-        # left_eye_coords = (int(landmarks[474].x * w), int(landmarks[474].y * h))
-        # right_eye_coords = (int(landmarks[469].x * w), int(landmarks[469].y * h))
-
-        def average_color(img, coords, size=5):
-            # Функция для расчета среднего цвета по списку координат
-            total_color = [0, 0, 0]  # Для накопления сумм цветов
-            count = 0
-
-            for (x, y) in coords:
-                x1 = max(x - size // 2, 0)
-                y1 = max(y - size // 2, 0)
-                x2 = min(x + size // 2 + 1, img.shape[1])
-                y2 = min(y + size // 2 + 1, img.shape[0])
-                region = img[y1:y2, x1:x2]
-                avg_bgr = region.mean(axis=(0, 1))
-                total_color[0] += avg_bgr[0]
-                total_color[1] += avg_bgr[1]
-                total_color[2] += avg_bgr[2]
-                count += 1
-
-            avg_bgr = [int(c / count) for c in total_color]
-            return tuple(avg_bgr[::-1])
-
         left_eye_coords = [
             # (int(landmarks[468].x * w), int(landmarks[468].y * h)),  # зрачок
             (int(landmarks[469].x * w), int(landmarks[469].y * h)),
@@ -166,60 +258,53 @@ class FaceDetector:
             (int(landmarks[477].x * w), int(landmarks[477].y * h))
         ]
 
-        left_pupil = (int(landmarks[468].x * w), int(landmarks[468].y * h))
-        right_pupil = (int(landmarks[473].x * w), int(landmarks[473].y * h))
+        left_iris_indices = [469, 470, 471, 472]
+        right_iris_indices = [474, 475, 476, 477]
+        left_pupil = landmark_to_pixel(landmarks[468], w, h)
+        right_pupil = landmark_to_pixel(landmarks[473], w, h)
 
-        # Маски для глаз
-        mask_left = np.zeros_like(image)
-        mask_right = np.zeros_like(image)
+        eye_colors = []
+        for eye_label, iris_indices, pupil_point in [
+            ("Left", left_iris_indices, left_pupil),
+            ("Right", right_iris_indices, right_pupil)
+        ]:
+            iris_points = get_polygon_points(landmarks, iris_indices, w, h)
 
-        # Преобразуем координаты в формат для рисования многоугольников
-        left_eye_points = np.array(left_eye_coords, np.int32)
-        right_eye_points = np.array(right_eye_coords, np.int32)
+            # Цвет зрачка
+            pupil_region = extract_region_color(image, pupil_point, PUPIL_RADIUS)
+            pupil_color = get_dominant_color(pupil_region)
 
-        # Закрашиваем области радужки в масках (без учета зрачков)
-        cv2.fillPoly(mask_left, [left_eye_points], (255, 255, 255))
-        cv2.fillPoly(mask_right, [right_eye_points], (255, 255, 255))
+            # Маска радужки
+            iris_mask = create_polygon_mask(image.shape, iris_points)
+            iris_coords = np.column_stack(np.where(iris_mask == 255))
+            iris_coords = [(x, y) for y, x in iris_coords]
 
-        # Маски для зрачков (исключаем область вокруг зрачков)
-        mask_left_pupil = np.zeros_like(image)
-        mask_right_pupil = np.zeros_like(image)
+            # Затем только среди них ищем по цвету
+            pupil_area, iris_without_pupil = get_circular_pupil_from_filtered_pixels(
+                image, iris_points, pupil_point, iris_coords,
+                pupil_color, color_threshold=COLOR_THRESHOLD,
+                max_ratio=0.3
+            )
 
-        # Задаем маленькие области вокруг зрачков
-        cv2.circle(mask_left_pupil, left_pupil, 10, (0, 0, 0), -1)
-        cv2.circle(mask_right_pupil, right_pupil, 10, (0, 0, 0), -1)
+            # Радужка без зрачка
+            iris_without_pupil = list(set(iris_coords) - set(pupil_area))
+            iris_colors = np.array([image[y, x] for (x, y) in iris_without_pupil])
+            if len(iris_colors) > 0:
+                print(iris_colors)
+                iris_color = get_dominant_color(iris_colors)
 
-        cv2.circle(image, left_pupil, 10, (0, 0, 0), -1)
-        cv2.circle(image, right_pupil, 10, (0, 0, 0), -1)
+                eye_colors.append(iris_color)
 
-        # Убираем пиксели зрачков из маски радужки
-        mask_left = cv2.bitwise_and(mask_left, cv2.bitwise_not(mask_left_pupil))
-        mask_right = cv2.bitwise_and(mask_right, cv2.bitwise_not(mask_right_pupil))
+                print(eye_label, iris_color)
 
-        left_eye_region = cv2.bitwise_and(image, mask_left)
-        right_eye_region = cv2.bitwise_and(image, mask_right)
+            # Визуализация: контур радужки
+            cv2.polylines(image, [np.array(iris_points)], isClosed=True, color=(255, 255, 0), thickness=1)
 
-        # Чтобы не учитывать белые пиксели маски, используем только те пиксели, которые имеют значения (не белые)
-        left_eye_pixels = left_eye_region[np.all(left_eye_region != 0, axis=-1)]  # Пиксели, не равные (0, 0, 0)
-        right_eye_pixels = right_eye_region[np.all(right_eye_region != 0, axis=-1)]  # Пиксели, не равные (0, 0, 0)
+            # Визуализация: зрачок (красным)
+            for (x, y) in pupil_area:
+                cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
 
-        # Определение среднего цвета радужки (пиксели внутри маски, игнорируя зрачки)
-        if len(left_eye_pixels) > 0:
-            # Для каждого канала (R, G, B) вычисляем среднее значение
-            left_eye_color = np.mean(left_eye_pixels.reshape(-1, 3), axis=0)
-        else:
-            left_eye_color = [0, 0, 0]  # Если пикселей нет, вернем черный
-
-        if len(right_eye_pixels) > 0:
-            # Для каждого канала (R, G, B) вычисляем среднее значение
-            right_eye_color = np.mean(right_eye_pixels.reshape(-1, 3), axis=0)
-        else:
-            right_eye_color = [0, 0, 0]  # Если пикселей нет, вернем черный
-
-        # avg_left_eye_rgb = average_color(image, left_eye_coords)
-        # avg_right_eye_rgb = average_color(image, right_eye_coords)
-
-        eye_rgb = tuple(int((c1 + c2) / 2) for c1, c2 in zip(left_eye_color, right_eye_color))
+        eye_rgb = np.mean(eye_colors, axis=0)[::-1]
 
         colors = []
         for idx in COLORTYPE_IDS:

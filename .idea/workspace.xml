@@ -4,18 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6b3b1136-dcb4-4257-8554-7e7d43c7550d" name="Changes" comment="i18n in dialogs">
-      <change afterPath="$PROJECT_DIR$/dialog_media_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/face_detector.py" afterDir="false" />
+    <list default="true" id="6b3b1136-dcb4-4257-8554-7e7d43c7550d" name="Changes" comment="color type detection added">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogs/choose_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/choose_options.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dialogs/show_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/show_result.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogs/start.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/start.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogs/upload_photo.py" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/upload_photo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/env.py" beforeDir="false" afterPath="$PROJECT_DIR$/env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/strings/ru.yml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/strings/ru.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/face_detector.py" beforeDir="false" afterPath="$PROJECT_DIR$/face_detector.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +49,7 @@
       <recent name="C:\Users\Admin\PycharmProjects\colorTypeBot" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.app">
+  <component name="RunManager" selected="Python.test_mediapipe">
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="colorTypeBot" />
       <option name="ENV_FILES" value="" />
@@ -112,6 +105,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial" />
     <MESSAGE value="i18n in dialogs" />
-    <option name="LAST_COMMIT_MESSAGE" value="i18n in dialogs" />
+    <MESSAGE value="color type detection added" />
+    <option name="LAST_COMMIT_MESSAGE" value="color type detection added" />
   </component>
 </project>
